@@ -1,0 +1,199 @@
+This file contains all SQL queries developed for the urban retail co. inventory analytics project. This queries are designed to address key business challenges such as stockouts, overstocking,forecasting demand, and identifying performance inefficiencies across stores and products, and etc.
+
+
+create database urban_inventory;  #it will create the database
+use urban_inventory;   			 #for using the database 
+create table products(
+product_id varchar(20) primary key,
+category varchar(50)
+);								#for creating the product table
+create table stores(
+store_id varchar(20) primary key,
+region varchar(50)
+);								##for creating the stores table
+create table inventory(
+inventory_id int auto_increment primary key,
+date date,
+store_id varchar(20),
+product_id varchar(20),
+inventory_level int,
+units_sold int,
+units_ordered int,
+demand_forcast float,
+foreign key(store_id) references stores(store_id),
+foreign key(product_id) references products(product_id)
+);									#for creating the inventory table
+create table pricing_conditions(
+condition_id int auto_increment primary key,
+date date,
+store_id varchar(20),
+product_id varchar(20),
+price float,
+discount int,
+weather_condition varchar(50),
+holiday_promotion boolean,
+competitor_pricing float,
+seasonality varchar(20),
+foreign key(store_id) references stores(store_id),
+foreign key(product_id) references products(product_id)
+);									#for creating the pricing condition table
+
+# stock level calculation across stores
+#This helps analyze current stock levels grouped by product and region
+#helps identify real time stock position to support operational decisions
+select s.region, i.product_id, p.category, sum(i.inventory_level) as Total_Stock
+from inventory i 
+join stores s on i.store_id = s.store_id
+join products p on i.product_id=p.product_id
+group by s.region, i.product_id, p.category
+order by Total_Stock desc;
+
+#low inventory detection based on reorder threshold
+#It will show the inventory level by assuming reorder point=100
+#prevents stockout by highlighting items needing urgent replenishment
+select i.store_id, i.product_id, p.category, i.inventory_level 
+from inventory i 
+join products p on i.product_id=p.product_id
+where i.inventory_level<100
+order by i.inventory_level asc;
+
+#reorder point estimation using historical trend
+#This calculates the average units sold over the past 30 days per product store combination
+#automate restoking logic using past cosumption patterns
+select store_id, product_id, round(avg(units_sold),2) as Avg_Daily_Sales, round(avg(units_sold)*5,0) as Suggested_Reorder_Point
+from inventory
+group by store_id, product_id;
+
+#inventory turnover ratio
+#This will show how fast is inventory moving. the higher, the better
+#measures how efficiently inventory is being utilized
+select product_id, round(sum(units_sold)/nullif(avg(inventory_level),0),2) as Inventory_Turnover
+from inventory
+group by product_id
+order by Inventory_Turnover desc;
+
+#kpi summary report
+#Shows average stock and stockout rate
+select product_id, round(avg(inventory_level),2) as Avg_Stock, 
+round(sum(case when units_sold<demand_forcast then 1 else 0 end)/count(*)*100,2) as Stockout_percentage
+from inventory
+group by product_id;
+
+#inventory aging report
+#Shows how long stock has been sitting without movement(simulated via low recent sales)
+select store_id, product_id, max(date) as Last_Sold_Date, datediff(curdate(),max(date)) as Days_Since_Last_Sale
+from inventory
+where units_sold>0
+group by store_id, product_id
+order by Days_Since_Last_Sale desc;
+
+#overstock detection
+#Products with high stock levels and low recent sales
+select i.store_id, i.product_id, avg(i.inventory_level) as Avg_Stock, avg(i.units_sold) as Avg_Sales
+from inventory i 
+group by i.store_id, i.product_id
+having Avg_Stock>120 and Avg_Sales<100
+order by Avg_Stock desc;
+
+#forecasting demand by week
+#Group total demand forecast by week and product to detect trends
+select product_id, year(date) as Year, week(date) as Week_Number, sum(demand_forcast) as Weekly_Forecast
+from inventory
+group by product_id, year(date), week(date)
+order by product_id, Year, Week_Number;
+
+#holiday and promotion impact on sales
+#This will checks if hoilday/promomation periods boost sales or not 
+select i.date, i.product_id, pc.holiday_promotion, sum(i.units_sold) as Units_Sold
+from inventory i 
+join pricing_conditions pc on i.date=pc.date and i.store_id=pc.store_id and i.product_id=pc.product_id
+group by i.date,i.product_id,pc.holiday_promotion
+order by Units_Sold desc;
+
+#store performance comparsion
+#It will measure total sales and forecast accuracy by store
+select i.store_id, sum(i.units_sold) as Total_Sales, sum(i.demand_forcast) as Total_Forecast, 
+round(abs(sum(i.units_sold)-sum(i.demand_forcast))/sum(i.units_sold)*100,2) as Forecast_Error_Percent
+from inventory i 
+group by i.store_id
+order by Forecast_Error_Percent asc;
+
+#pricing vs sales sensitivity
+#It will give the correlation between price and sales 
+select pc.product_id, round(avg(pc.price),2) as Avg_Price, round(avg(i.units_sold),2) as Avg_Sales
+from inventory i 
+join pricing_conditions pc on i.date=pc.date and i.store_id=pc.store_id and i.product_id=pc.product_id
+group by pc.product_id
+order by Avg_Price;
+
+# Recommend Stock Adjustments to Reduce Holding Cost
+#Recommended stock = average weekly sales * coverage weeks (e.g., 3 weeks)
+#This will flag products that are overstocked or understocked based on their average sales and target inventory level
+#drives cost reduction by suggesting transfer, markdown or reorder actions
+WITH Weekly_Sales AS (
+    SELECT Product_ID,Store_ID,
+        ROUND(SUM(Units_Sold) / COUNT(DISTINCT WEEK(Date)), 2) AS Avg_Weekly_Sales
+    FROM Inventory
+    GROUP BY Product_ID, Store_ID
+),
+Current_Stock AS (
+    SELECT Product_ID,Store_ID,
+        AVG(Inventory_Level) AS Avg_Inventory
+    FROM Inventory
+    GROUP BY Product_ID, Store_ID
+)
+SELECT ws.Product_ID,ws.Store_ID,ws.Avg_Weekly_Sales,cs.Avg_Inventory,
+    ROUND(ws.Avg_Weekly_Sales * 3, 2) AS Recommended_Stock_Level,
+    ROUND(cs.Avg_Inventory - (ws.Avg_Weekly_Sales * 3), 2) AS Stock_Adjustment,
+    CASE 
+        WHEN cs.Avg_Inventory > ws.Avg_Weekly_Sales * 3 THEN 'Reduce Stock'
+        WHEN cs.Avg_Inventory < ws.Avg_Weekly_Sales * 2 THEN 'Increase Stock'
+        ELSE 'Optimal'
+    END AS Recommendation
+FROM Weekly_Sales ws
+JOIN Current_Stock cs ON ws.Product_ID = cs.Product_ID AND ws.Store_ID = cs.Store_ID
+ORDER BY Recommendation DESC;
+
+#Forecast Demand Trends Based on Seasonal/Cyclical Data
+#This will analyze forecasted demand over time and aggergate it by season
+#supports demand forecasting and seasonal inventory adjustments
+SELECT Product_ID,
+    CASE 
+        WHEN MONTH(Date) IN (12, 1, 2) THEN 'Winter'
+        WHEN MONTH(Date) IN (3, 4, 5) THEN 'Spring'
+        WHEN MONTH(Date) IN (6, 7, 8) THEN 'Summer'
+        WHEN MONTH(Date) IN (9, 10, 11) THEN 'Fall'
+    END AS Season,
+    YEAR(Date) AS Year,
+    SUM(Demand_Forcast) AS Seasonal_Forecast
+FROM Inventory
+GROUP BY Product_ID, Season, Year
+ORDER BY Product_ID, Year, Season;
+
+#Highlight Supplier Performance Inconsistencies
+#This will flag potential supplier reliability issues by identifying high forecast demand,low units order,persistence low inventory
+#improves supplier management and contract negotiation
+SELECT Product_ID,Store_ID,
+    COUNT(*) AS Days_Tracked,
+    SUM(CASE WHEN Demand_Forcast > 20 AND Units_Ordered < (0.8 * Demand_Forcast) THEN 1 ELSE 0 END) AS Underordered_Days,
+    SUM(CASE WHEN Inventory_Level < 50 THEN 1 ELSE 0 END) AS Low_Stock_Days,
+    ROUND(SUM(CASE WHEN Demand_Forcast > 20 AND Units_Ordered < (0.8 * Demand_Forcast) THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS Underordering_Percentage,
+    ROUND(SUM(CASE WHEN Inventory_Level < 50 THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS Low_Stock_Percentage
+FROM Inventory
+GROUP BY Product_ID, Store_ID
+ORDER BY Underordering_Percentage DESC;
+
+#fast vs slow moving products
+#Categorize SKUs by speed of movement
+#helps in decision making for promotions, pricing and clearance
+SELECT Product_ID,Store_ID,
+    AVG(Units_Sold) AS Avg_Sales_Store,
+    CASE 
+        WHEN AVG(Units_Sold) >= 120 THEN 'Fast-Selling'
+        WHEN AVG(Units_Sold) BETWEEN  80 AND 120 THEN 'Moderate'
+        ELSE 'Slow-Moving'
+    END AS Sales_Category
+FROM Inventory
+GROUP BY Product_ID, Store_ID
+ORDER BY Avg_Sales_Store DESC;
+
