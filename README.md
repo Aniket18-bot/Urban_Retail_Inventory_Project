@@ -1,88 +1,88 @@
-📂 Solving Inventory Inefficiencies Using SQL
 
-📜 Introduction
+# 📦 **Solving Inventory Inefficiencies Using SQL**
 
-Urban Retail Co. is a rapidly expanding mid-sized retail chain with both physical and online platforms. It operates across several cities and offers more than 5,000 diverse SKUs. However, as the company scales, it's facing serious inefficiencies like stockouts, overstocking, and poor visibility into warehouse and store stock levels.
+## 📝 **Overview**
+Urban Retail Co. is a fast-growing mid-sized retail chain with both physical stores and online operations across several cities. With over 5,000 SKUs in its catalog—including groceries, electronics, and personal care items—the company faced significant challenges in managing inventory efficiently.
 
-This project aims to design and implement a SQL-driven inventory monitoring and optimization solution to enhance decision-making using real-time insights.
+Key issues included:
+- Frequent **stockouts** of high-demand products, leading to lost sales.
+- Excess **overstocking** of slow-moving items, tying up working capital.
+- Lack of **real-time insights** into product performance and supplier reliability.
+- Inefficient, reactive decision-making due to underutilized data.
 
-🎯 Project Goals
+👉 **Goal**: Design and implement a **SQL-driven inventory monitoring and optimization solution** that transforms raw data into actionable insights. This solution includes analytical SQL scripts, a clean relational database design, and a Power BI dashboard for decision-makers.
 
-Develop efficient and scalable SQL queries to extract and analyze inventory data.
+---
 
-Diagnose inefficiencies and recommend corrective actions.
+## 🎯 **Objectives**
+- Normalize the raw inventory dataset into an efficient **relational database schema**.
+- Develop **SQL queries** to:
+  - Calculate stock levels, stockouts, reorder points, and inventory turnover.
+  - Identify fast-selling vs slow-moving SKUs.
+  - Forecast demand trends based on seasonality.
+  - Highlight supplier performance inconsistencies.
+  - Recommend stock adjustments to reduce holding costs.
+- Build an interactive **Power BI dashboard** to visualize KPIs and trends.
 
-Improve inventory accuracy and reduce holding costs.
+---
 
-Deliver actionable business insights via SQL scripts and visual reports.
+## 🛠 **Tech Stack**
+| Tool        | Purpose                                        |
+|-------------|------------------------------------------------|
+| **MySQL**   | Data storage, cleaning, analytics, SQL queries |
+| **Excel**   | Data exports, manual checks, Power BI inputs   |
+| **Power BI**| Visualization, dashboard creation              |
 
+---
 
-⚙️ Key Tasks & Deliverables
+## 📌 **Key Features**
+✅ Normalized relational schema with ERD  
+✅ Advanced SQL queries:
+- Stock levels, stockouts, and reorder point estimation
+- Inventory turnover and SKU performance
+- Supplier reliability analysis
+- Seasonal demand forecasting
+- Stock adjustment recommendations  
 
-SQL Queries
+✅ Power BI Dashboard:
+- Inventory health KPIs (turnover ratio, stockout %, overstock %)
+- Region-wise & product-category insights
+- Supplier performance charts
+- Seasonal demand trend lines
 
-Stock level calculations across stores and warehouses
+---
 
-Low inventory detection based on reorder points
+## 📈 **Expected Business Impact**
+- **Smarter inventory decisions** based on data, not intuition  
+- **Reduced stockouts and overstocks**, saving costs and boosting availability  
+- **Better supplier accountability** and improved supply chain efficiency  
+- **Higher customer satisfaction** due to better product availability  
+- **Optimized cash flow** by reducing tied-up capital in excess inventory  
 
-Reorder point estimation using historical sales trends
+---
 
-Inventory turnover analysis
+## 💡 **Future Enhancements**
+- Real-time data ingestion pipelines (ETL)  
+- Predictive analytics using machine learning models for demand forecasting  
+- ERP integration for automated reorder and supply chain actions  
 
-Summary reports with KPIs (e.g. stockout rates, average stock levels)
+---
 
+## 🚀 **How to Run**
+1️⃣ Import `create_schema.sql` into your MySQL instance.  
+2️⃣ Load the dataset into the database (see **Resources** below).  
+3️⃣ Run individual analysis queries (e.g. `stock_level_analysis.sql`) to generate insights.  
+4️⃣ Export query results to CSV and load into **Power BI** for dashboarding (see `inventory_dashboard.pbix`).  
 
-Database Optimization
+---
 
-Normalize raw inventory data into a relational schema
+## 📦 **Deliverables**
+✅ SQL scripts (well-documented and optimized)  
+✅ Normalized schema / ERD  
+✅ Power BI dashboard file (`.pbix`)  
+✅ Executive summary report (PDF / DOCX)  
 
-Implement optimization best practices (e.g. indexes, joins, window functions)
+---
 
-
-Analytical Outputs
-
-Identify fast-selling vs slow-moving products
-
-Recommend stock level adjustments to minimize holding costs
-
-Highlight supplier performance inconsistencies
-
-Forecast demand trends based on seasonal data
-
-
-Final Submission
-
-SQL scripts and documentation
-
-ER Diagram/schema design
-
-Power BI dashboard/report (mockup or real)
-
-1-2 page executive summary of key findings
-
-
-🧰 Tools & Technologies
-
-MySQL — Data storage and query execution
-
-Excel — Data exploration and quick calculations
-
-Power BI — Interactive dashboard and reporting
-
-
-💡 Expected Impact
-
-By the end of this project, Urban Retail Co. will:
-
-Achieve smarter inventory decisions powered by data
-
-Reduce instances of stockouts and overstocking
-
-Improve supply chain efficiency and inventory management
-
-Enhance overall profitability and customer satisfaction
-
-
-🔗 Resources
-
-Dataset link: https://drive.google.com/drive/folders/1434xs93SKLoZkxaRzhoxhIA_sUKT-jMY
+## 📂 **Resources**
+- 📄 **Dataset**: [Urban Retail Co. Inventory Dataset](https://drive.google.com/drive/folders/1434xs93SKLoZkxaRzhoxhIA_sUKT-jMY)
